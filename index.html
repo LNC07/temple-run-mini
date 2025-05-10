@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Temple Run Multiplayer</title>
+  <style>
+    body {
+      background: #222;
+      color: white;
+      text-align: center;
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    canvas {
+      border: 2px solid white;
+      background: black;
+      display: block;
+      margin: 20px auto;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Temple Run Multiplayer</h1>
+<canvas id="game" width="400" height="400"></canvas>
+<p id="status">Waiting for another player...</p>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.10.0/firebase-database.js"></script>
+
+<script>
+  // Your Firebase Config
+  const firebaseConfig = {
+    apiKey: "AIzaSyBFVbWmR8Ui6LsOdhc8FGi3XaWfxSVCucc",
+    authDomain: "temple-run-mini.firebaseapp.com",
+    databaseURL: "https://temple-run-mini-default-rtdb.firebaseio.com",
+    projectId: "temple-run-mini",
+    storageBucket: "temple-run-mini.firebasestorage.app",
+    messagingSenderId: "1051204585325",
+    appId: "1:1051204585325:web:66d65ee9a1ae1b3b673c64",
+    measurementId: "G-C8HCF242Y5"
+  };
+
+  // Init Firebase
+  const app = firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // Game logic
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+
+  let playerId = 'player' + Math.floor(Math.random() * 10000);
+  let playersRef = db.ref('players');
+  let myPlayer = {
+    x: 50,
+    y: 300,
+    score: 0
+  };
+
+  playersRef.child(playerId).set(myPlayer);
+  playersRef.child(playerId).onDisconnect().remove();
+
+  function drawPlayers(snapshot) {
+    ctx.clearRect(0, 0, 400, 400);
+    snapshot.forEach(playerSnap => {
+      const player = playerSnap.val();
+      ctx.fillStyle = playerSnap.key === playerId ? 'lime' : 'red';
+      ctx.fillRect(player.x, player.y, 20, 20);
+    });
+  }
+
+  playersRef.on('value', drawPlayers);
+
+  // Controls
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp') myPlayer.y -= 10;
+    if (e.key === 'ArrowDown') myPlayer.y += 10;
+    if (e.key === 'ArrowRight') myPlayer.x += 10;
+    if (e.key === 'ArrowLeft') myPlayer.x -= 10;
+    updateMyPosition();
+  });
+
+  function updateMyPosition() {
+    playersRef.child(playerId).set(myPlayer);
+  }
+
+  document.getElementById('status').innerText = 'Multiplayer Ready. Move with Arrow Keys.';
+</script>
+
+</body>
+</html>
